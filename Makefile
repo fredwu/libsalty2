@@ -14,15 +14,21 @@ ERL_LDFLAGS ?= -L$(ERL_EI_LIBDIR)
 CFLAGS ?= -O2 -Wall -Wextra
 LDFLAGS += -fPIC -shared -lsodium -lei
 
-ifeq ($(CROSSCOMPILE),)
-CFLAGS += -I/usr/local/include/sodium
-LDFLAGS += -L/usr/local/lib
+BREW_EXISTS := $(shell command -v brew 2> /dev/null)
+
+ifdef BREW_EXISTS
+LOCAL_PATH = $(shell brew --prefix)
+else
+LOCAL_PATH = /usr/local
+endif
+
+CFLAGS += -I$(LOCAL_PATH)/include -I$(LOCAL_PATH)/include/sodium
+LDFLAGS += -L$(LOCAL_PATH)/lib
 
 ifeq ($(shell uname),Darwin)
-LDFLAGS += -Wl,-rpath /usr/local/lib -flat_namespace -undefined suppress
+LDFLAGS += -Wl,-rpath $(LOCAL_PATH)/lib -flat_namespace -undefined suppress
 else
-LDFLAGS += -Wl,-R/usr/local/lib
-endif
+LDFLAGS += -Wl,-R$(LOCAL_PATH)/lib
 endif
 
 SRC=src/salty_nif.c
